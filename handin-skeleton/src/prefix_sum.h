@@ -4,5 +4,7 @@
 #include <pthread.h>
 #include <spin_barrier.h>
 #include <iostream>
+#include <pthread_barrier.h>
 
 void* compute_prefix_sum(void* a);
+void barrier_init(int blocks);

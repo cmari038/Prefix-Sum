@@ -3,24 +3,12 @@
 using namespace std;
 
 
-void block_sum(int block, int n_loops, int (*scan_operator)(int, int, int), int* output, int* input, int n_threads, int n) {
-    int i = block;
-    int blocks = n_threads;
-    for(int j = i * n / (blocks+1); j < (i+1) * n / (blocks+1); j++) {
-            output[j] = scan_operator(input[i-1], input[i], n_loops);
-        }
+pthread_barrier_t barrier;
+
+void barrier_init(int blocks) {
+       pthread_barrier_init(&barrier, NULL, blocks);
 }
 
-void offset_sum(int block, int n_loops, int (*scan_operator)(int, int, int), int* output, int* input, int n_threads, int n) {
-    int i = block;
-    int blocks = n_threads;
-    for(i = 1; i <= blocks; i++) {
-        for(int j = i * n / (blocks+1); j < (i+1) * n / (blocks+1); j++) {
-            int offset = input[i*n/(blocks+1)];
-            output[j] += offset;
-        }
-    }
-}
 void* compute_prefix_sum(void *a)
 {
     prefix_sum_args_t *args = (prefix_sum_args_t *)a;
@@ -37,29 +25,38 @@ void* compute_prefix_sum(void *a)
     int blocks = args->n_threads;
     int i = args->thread_num;
 
+    //pthread_barrier_t barrier;
+    //pthread_barrier_init(&barrier, NULL, blocks);
 
-    //for(i = 0; i < blocks; i++) {
-    for(j = i * n / (blocks+1); j < (i+1) * n / (blocks+1); j++) {
-        if (i == blocks) {break;}
-        output[j] = scan_operator(input[i-1], input[i], n_loops);
+    for(j = i * n / (blocks); j < (i+1) * n / (blocks); j++) {
+        //if (i == blocks - 1) {break;}
+        if(j == i * n / (blocks)) {output[j] = input[j];}
+        else {output[j] = scan_operator(input[j-1], input[j], n_loops);}
     }
-    //}
+
+    pthread_barrier_wait(&barrier);
+
 
     int x = 0;
+    int offset = 0;
 
-    for(i = 1; i <= blocks; i++) {
-        x += output[i*n/(blocks+1)-1];
-        output[i*n/(blocks+1)-1] = x;
-    }
-
-    //for(i = 1; i <= blocks; i++) {
-    for(j = i * n / (blocks+1); j < (i+1) * n / (blocks+1); j++) {
-        if (i==0) {break;}
-        int offset = output[i*n/(blocks+1)];
-        output[j] += offset;
-    }
+    //for(i = 1; i < blocks; i++) {
+        //x += output[i*n/(blocks)-1];
+    x = scan_operator(x, output[i*n/(blocks)-1], n_loops);
+    output[i*n/(blocks)] = x;
     //}
+    pthread_barrier_wait(&barrier);
 
+    for(j = i * n / (blocks); j < (i+1) * n / (blocks); j++) {
+        // stride = n / blocks
+        //if (i==0) {break;}
+        offset = output[i*n/(blocks)];
+        output[j + (n/blocks)] = scan_operator(output[j + (n/blocks)], offset, n_loops);
+    }
+
+    pthread_barrier_wait(&barrier);
+
+    pthread_barrier_destroy(&barrier);
 
     /************************
      * Your code here...    *
