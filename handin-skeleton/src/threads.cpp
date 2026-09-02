@@ -12,6 +12,7 @@ void start_threads(pthread_t *threads,
                    void *(*start_routine)(void *)) {
   int ret = 0;
   for (int i = 0; i < n_threads; ++i) {
+    args[i].thread_num = i; // block val
     ret |= pthread_create(&(threads[i]), NULL, start_routine,
                           (void *)&(args[i]));
   }
