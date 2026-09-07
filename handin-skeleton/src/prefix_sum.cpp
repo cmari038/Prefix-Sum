@@ -27,7 +27,7 @@ void spinlock_wait() {
     increment();
     spinBarrier.setCounter(counter.load());
     spinBarrier.loop();
-    decrement();
+    //decrement();
 }
 
 void* compute_prefix_sum(void *a)
@@ -60,10 +60,11 @@ void* compute_prefix_sum(void *a)
     int x = 0;
     int offset = 0;
 
-    for(i = 1; i < blocks; i++) {
+    for(int k = 1; k < blocks; k++) {
+        if(i > 0) {break;}
         //x += output[i*n/(blocks)-1];
-        x = scan_operator(x, output[i*n/(blocks)-1], n_loops);
-        output[i*n/(blocks)] = x;
+        x = scan_operator(x, output[k*n/(blocks)-1], n_loops);
+        output[k*n/(blocks)] = x;
     }
     pthread_barrier_wait(&barrier);
     //spinlock_wait();
@@ -72,7 +73,7 @@ void* compute_prefix_sum(void *a)
         // stride = n / blocks
         //if (i==0) {break;}
         offset = output[i*n/(blocks)];
-        output[j + (n/blocks)] = scan_operator(output[j + (n/blocks)], offset, n_loops);
+        output[j] = scan_operator(output[j], offset, n_loops);
     }
 
     pthread_barrier_wait(&barrier);
