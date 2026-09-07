@@ -10,3 +10,7 @@ using namespace std;
 void* compute_prefix_sum(void* a);
 void barrier_init(int blocks);
 extern atomic<int> counter;
+extern pthread_barrier_t barrier;
+extern spin_barrier spinBarrier;
+void barrier_init(int blocks);
+void barrier_destroy();

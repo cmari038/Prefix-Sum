@@ -11,6 +11,10 @@ void barrier_init(int blocks) {
        pthread_barrier_init(&barrier, NULL, blocks);
 }
 
+void barrier_destroy() {
+    pthread_barrier_destroy(&barrier);
+}
+
 void increment() {
     counter++;
 }
@@ -29,8 +33,6 @@ void spinlock_wait() {
 void* compute_prefix_sum(void *a)
 {
     prefix_sum_args_t *args = (prefix_sum_args_t *)a;
-
-    //int id = args->t_id;
     int n = args->n_vals;
     int* input = args->input_vals;
     int* output = args->output_vals;
@@ -38,12 +40,10 @@ void* compute_prefix_sum(void *a)
     int (*scan_operator)(int, int, int);
     scan_operator = args->op;
     int j;
-    //int stride = 0;
     int blocks = args->n_threads;
     int i = args->thread_num;
 
-    spinBarrier.getnumThreads(blocks);
-
+    //spinBarrier.getnumThreads(blocks);
     //pthread_barrier_t barrier;
     //pthread_barrier_init(&barrier, NULL, blocks);
 
@@ -54,7 +54,7 @@ void* compute_prefix_sum(void *a)
     }
 
     pthread_barrier_wait(&barrier);
-    spinlock_wait();
+    //spinlock_wait();
 
 
     int x = 0;
@@ -66,7 +66,7 @@ void* compute_prefix_sum(void *a)
         output[i*n/(blocks)] = x;
     }
     pthread_barrier_wait(&barrier);
-    spinlock_wait();
+    //spinlock_wait();
 
     for(j = i * n / (blocks); j < (i+1) * n / (blocks); j++) {
         // stride = n / blocks
@@ -76,14 +76,9 @@ void* compute_prefix_sum(void *a)
     }
 
     pthread_barrier_wait(&barrier);
-    spinlock_wait();
+    //spinlock_wait();
 
-    pthread_barrier_destroy(&barrier);
-
-    /************************
-     * Your code here...    *
-     * or wherever you like *
-     ************************/
+   //pthread_barrier_destroy(&barrier);
 
     return 0;
 }
