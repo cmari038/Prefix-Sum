@@ -7,18 +7,25 @@ using namespace std;
  * or wherever you like *
  ************************/
 
- void spin_barrier::setCounter(int count) {
+ /*void spin_barrier::setCounter(int count) {
    counter = count;
- }
+ }*/
 
  void spin_barrier::loop() {
     //int finishedThreads = counter.load();
-    while(counter < numThreads) {
-      this_thread::yield();
+    int local_counter = counter.fetch_add(1);
+    int local_go = go.load();
+    if(local_counter + 1 == numThreads) {
+      reset();
+      go.store(1-go.load());
     }
-    reset(); 
+    else {
+      while(local_go == go.load()) {
+          this_thread::yield();
+      }
+    }
  }
 
  void spin_barrier::reset() {
-  counter = 0;
+  counter.store(0);
  }

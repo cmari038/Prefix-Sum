@@ -5,7 +5,6 @@ using namespace std;
 
 pthread_barrier_t barrier;
 spin_barrier spinBarrier;
-atomic<int> counter{0};
 
 void barrier_init(int blocks) {
        pthread_barrier_init(&barrier, NULL, blocks);
@@ -13,21 +12,6 @@ void barrier_init(int blocks) {
 
 void barrier_destroy() {
     pthread_barrier_destroy(&barrier);
-}
-
-void increment() {
-    counter++;
-}
-
-void decrement() {
-    counter--; 
-}
-
-void spinlock_wait() {
-    increment();
-    spinBarrier.setCounter(counter.load());
-    spinBarrier.loop();
-    //decrement();
 }
 
 void* compute_prefix_sum(void *a)
@@ -53,8 +37,8 @@ void* compute_prefix_sum(void *a)
         else {output[j] = scan_operator(input[j-1], input[j], n_loops);}
     }
 
-    pthread_barrier_wait(&barrier);
-    //spinlock_wait();
+    //pthread_barrier_wait(&barrier);
+    spinBarrier.loop();
 
 
     int x = 0;
@@ -66,8 +50,8 @@ void* compute_prefix_sum(void *a)
         x = scan_operator(x, output[k*n/(blocks)-1], n_loops);
         output[k*n/(blocks)] = x;
     }
-    pthread_barrier_wait(&barrier);
-    //spinlock_wait();
+    //pthread_barrier_wait(&barrier);
+    spinBarrier.loop();
 
     for(j = i * n / (blocks); j < (i+1) * n / (blocks); j++) {
         // stride = n / blocks
@@ -76,8 +60,8 @@ void* compute_prefix_sum(void *a)
         output[j] = scan_operator(output[j], offset, n_loops);
     }
 
-    pthread_barrier_wait(&barrier);
-    //spinlock_wait();
+    //pthread_barrier_wait(&barrier);
+    spinBarrier.loop();
 
    //pthread_barrier_destroy(&barrier);
 
