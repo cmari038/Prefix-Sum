@@ -14,6 +14,15 @@ void barrier_destroy() {
     pthread_barrier_destroy(&barrier);
 }
 
+void barrier_wait(bool spinlock) {
+    if (spinlock) {
+        spinBarrier.loop();
+    }
+    else {
+        pthread_barrier_wait(&barrier);
+    }
+}
+
 void* compute_prefix_sum(void *a)
 {
     prefix_sum_args_t *args = (prefix_sum_args_t *)a;
@@ -24,12 +33,9 @@ void* compute_prefix_sum(void *a)
     int (*scan_operator)(int, int, int);
     scan_operator = args->op;
     int j;
+    bool spin = args->spin;
     int blocks = args->n_threads;
     int i = args->thread_num;
-
-    //spinBarrier.getnumThreads(blocks);
-    //pthread_barrier_t barrier;
-    //pthread_barrier_init(&barrier, NULL, blocks);
 
     for(j = i * n / (blocks); j < (i+1) * n / (blocks); j++) {
         //if (i == blocks - 1) {break;}
@@ -37,8 +43,7 @@ void* compute_prefix_sum(void *a)
         else {output[j] = scan_operator(input[j-1], input[j], n_loops);}
     }
 
-    //pthread_barrier_wait(&barrier);
-    spinBarrier.loop();
+   barrier_wait(spin);
 
 
     int x = 0;
@@ -50,8 +55,7 @@ void* compute_prefix_sum(void *a)
         x = scan_operator(x, output[k*n/(blocks)-1], n_loops);
         output[k*n/(blocks)] = x;
     }
-    //pthread_barrier_wait(&barrier);
-    spinBarrier.loop();
+    barrier_wait(spin);
 
     for(j = i * n / (blocks); j < (i+1) * n / (blocks); j++) {
         // stride = n / blocks
@@ -60,10 +64,7 @@ void* compute_prefix_sum(void *a)
         output[j] = scan_operator(output[j], offset, n_loops);
     }
 
-    //pthread_barrier_wait(&barrier);
-    spinBarrier.loop();
-
-   //pthread_barrier_destroy(&barrier);
+    barrier_wait(spin);
 
     return 0;
 }
