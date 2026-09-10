@@ -40,7 +40,7 @@ void* compute_prefix_sum(void *a)
     for(j = i * n / (blocks); j < (i+1) * n / (blocks); j++) {
         //if (i == blocks - 1) {break;}
         if(j == i * n / (blocks)) {output[j] = input[j];}
-        else {output[j] = scan_operator(input[j-1], input[j], n_loops);}
+        else {output[j] = scan_operator(output[j-1], input[j], n_loops);}
     }
 
    barrier_wait(spin);
@@ -50,15 +50,13 @@ void* compute_prefix_sum(void *a)
     int offset = 0;
 
     for(int k = 1; k < blocks; k++) {
-        if(i > 0) {break;}
-        //x += output[i*n/(blocks)-1];
-        x = scan_operator(x, output[k*n/(blocks)-1], n_loops);
-        output[k*n/(blocks)] = x;
+       if(i > 0) {break;}
+       x = scan_operator(x, output[k*n/(blocks)-1], n_loops);
+       output[k*n/(blocks)] = x;
     }
     barrier_wait(spin);
 
     for(j = i * n / (blocks); j < (i+1) * n / (blocks); j++) {
-        // stride = n / blocks
         //if (i==0) {break;}
         offset = output[i*n/(blocks)];
         output[j] = scan_operator(output[j], offset, n_loops);
