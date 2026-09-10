@@ -4,7 +4,7 @@ import re
 from subprocess import check_output
 from time import sleep
 
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 #
 #  Feel free (a.k.a. you have to) to modify this to instrument your code
