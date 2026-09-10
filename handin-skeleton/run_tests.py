@@ -41,7 +41,7 @@ print(", ".join(header))
 for csv in csvs:
     print (", ".join(csv))
 
-oneK = csvs[0]
+"""oneK = csvs[0]
 eightK = csvs[1]
 sixteenK = csvs[2]
 
@@ -59,4 +59,4 @@ plt.plot(header[2:], oneK[2:], label='1K')
 plt.plot(header[2:], eightK[2:], label='8K')
 plt.plot(header[2:], sixteenK[2:], label='16K')
 plt.legend()
-plt.show()
+plt.show()"""
