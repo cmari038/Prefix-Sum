@@ -52,12 +52,15 @@ int main(int argc, char **argv)
     }
     else {
         //cout << (opts.n_threads);
+        offsets = new int[opts.n_threads];
         barrier_init(opts.n_threads);
         spinBarrier.getnumThreads(opts.n_threads);
         start_threads(threads, opts.n_threads, ps_args, compute_prefix_sum);
 
         // Wait for threads to finish
         join_threads(threads, opts.n_threads);
+        delete[] offsets;
+        //offsets = nullptr;
         barrier_destroy();
     }
 

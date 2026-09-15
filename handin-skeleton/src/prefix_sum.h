@@ -13,3 +13,4 @@ extern pthread_barrier_t barrier;
 extern spin_barrier spinBarrier;
 void barrier_init(int blocks);
 void barrier_destroy();
+extern int* offsets;

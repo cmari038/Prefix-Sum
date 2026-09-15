@@ -5,6 +5,7 @@ using namespace std;
 
 pthread_barrier_t barrier;
 spin_barrier spinBarrier;
+int* offsets = nullptr;
 
 void barrier_init(int blocks) {
        pthread_barrier_init(&barrier, NULL, blocks);
@@ -46,20 +47,24 @@ void* compute_prefix_sum(void *a)
    barrier_wait(spin);
 
 
-    int x = 0;
+    //int x = 0;
     int offset = 0;
+    offsets[0] = 0;
 
     for(int k = 1; k < blocks; k++) {
        if(i > 0) {break;}
-       x = scan_operator(x, output[k*n/(blocks)-1], n_loops);
-       output[k*n/(blocks)] = x;
+        //x = scan_operator(x, output[k*n/(blocks)-1], n_loops);
+       offsets[k] = scan_operator(offsets[k-1], output[k*n/(blocks)-1], n_loops);
+       //output[k*n/(blocks)] = x;
     }
     barrier_wait(spin);
 
     for(j = i * n / (blocks); j < (i+1) * n / (blocks); j++) {
         //if (i==0) {break;}
-        offset = output[i*n/(blocks)];
+        //offset = output[i*n/(blocks)];
+        offset = offsets[i];
         output[j] = scan_operator(output[j], offset, n_loops);
+        //output[j] = offset;
     }
 
     barrier_wait(spin);
